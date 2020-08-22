@@ -18,3 +18,9 @@
 
 [https://ruslanspivak.com/lsbasi-part3/](https://ruslanspivak.com/lsbasi-part3/)
 
+# step06
+
+[https://ruslanspivak.com/lsbasi-part6/](https://ruslanspivak.com/lsbasi-part6/)
+
+完成一个基本的计算器了。
+
