@@ -1,5 +1,5 @@
-BEGIN, END, ID, ASSIGN, SEMI, DOT, EOF = (
-    'BEGIN', 'END', 'ID', 'ASSIGN', 'SEMI', 'DOT', 'EOF'
+BEGIN, END, ID, ASSIGN, SEMI, DOT, INTEGER, MUL, DIV, PLUS, MINUS, LPAREN, RPAREN, EOF = (
+    'BEGIN', 'END', 'ID', 'ASSIGN', 'SEMI', 'DOT', 'INTEGER', 'MUL', 'DIV', 'PLUS', 'MINUS', '(', ')', 'EOF'
 )
 
 
@@ -141,12 +141,77 @@ class Parser(object):
         self.eat(ID)
         return node
 
+    def factor(self):
+        token = self.current_token
+        if token.type == PLUS:
+            self.eat(PLUS)
+            return UnaryOp(token, self.factor())
+        elif token.type == MINUS:
+            self.eat(MINUS)
+            return UnaryOp(token, self.factor())
+        elif token.type == INTEGER:
+            self.eat(INTEGER)
+            return Num(token)
+        elif token.type == LPAREN:
+            self.eat(LPAREN)
+            node = self.expr()
+            self.eat(RPAREN)
+            return node
+        else:
+            return self.variable()
+
+    def term(self):
+        node = self.factor()
+
+        while self.current_token.type in (MUL, DIV):
+            token = self.current_token
+            if token.type == MUL:
+                self.eat(MUL)
+            elif token.type == DIV:
+                self.eat(DIV)
+            node = BinOp(left=node, op=token, right=self.factor())
+        return node
+
     def expr(self):
-        pass
+        node = self.term()
+
+        while self.current_token.type in (PLUS, MINUS):
+            token = self.current_token
+            if token.type == PLUS:
+                self.eat(PLUS)
+            elif token.type == MINUS:
+                self.eat(MINUS)
+            node = BinOp(left=node, op=token, right=self.term())
+        return node
+
+    def parse(self):
+        node = self.program()
+        if self.current_token.type != EOF:
+            self.error()
+        return node
 
 
 class AST(object):
     pass
+
+
+class BinOp(AST):
+    def __init__(self, left, op, right):
+        self.left = left
+        self.op = op
+        self.right = right
+
+
+class Num(AST):
+    def __init__(self, token):
+        self.token = token
+        self.value = token.value
+
+
+class UnaryOp(AST):
+    def __init__(self, op, expr):
+        self.token = self.op = op
+        self.expr = expr
 
 
 class Compound(AST):
